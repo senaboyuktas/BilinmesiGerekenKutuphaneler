@@ -6,16 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FluentValidationApp.Web.Models;
+using FluentValidation;
 
 namespace FluentValidationApp.Web.Controllers
 {
     public class CustomersController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IValidator<Customer> _customerValidator;
 
-        public CustomersController(AppDbContext context)
+        public CustomersController(AppDbContext context, IValidator<Customer> customerValidator)
         {
             _context = context;
+            _customerValidator = customerValidator;
         }
 
         // GET: Customers
@@ -53,9 +56,13 @@ namespace FluentValidationApp.Web.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,Email,Age,BirthDay")] Customer customer)
+        public async Task<IActionResult> Create(Customer customer)
         {
-            if (ModelState.IsValid)
+            var result = _customerValidator.Validate(customer);
+            //CustomerValidator customerValidator = new CustomerValidator();
+            //customerValidator.Validate(customer);
+
+            if (result.IsValid) // If bloğu olmasa boş kayıt eder.
             {
                 _context.Add(customer);
                 await _context.SaveChangesAsync();
